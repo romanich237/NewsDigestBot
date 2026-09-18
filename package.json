@@ -1,0 +1,24 @@
+{
+  "name": "news-digest-bot",
+  "version": "1.1.0",
+  "description": "Telegram news digest bot with SQLite, configurable news APIs, CLODEX monitoring, and PM2 support.",
+  "main": "src/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/main.js",
+    "preview": "node src/main.js --preview",
+    "now": "node src/main.js --now",
+    "validate": "node src/main.js --validate"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "cheerio": "^1.1.2",
+    "node-cron": "^4.2.1",
+    "rss-parser": "^3.13.0",
+    "telegraf": "^4.16.3",
+    "better-sqlite3": "^11.10.0"
+  }
+}

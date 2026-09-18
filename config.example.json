@@ -1,0 +1,175 @@
+{
+  "telegram": {
+    "bot_token": "YOUR_BOT_TOKEN",
+    "allowed_user_ids": [
+      "YOUR_TELEGRAM_USER_ID"
+    ],
+    "targets": [
+      {
+        "name": "Личные сообщения",
+        "type": "private",
+        "chat_id": "YOUR_PRIVATE_CHAT_ID",
+        "enabled": true
+      },
+      {
+        "name": "Группа",
+        "type": "group",
+        "chat_id": "YOUR_GROUP_CHAT_ID",
+        "enabled": false
+      },
+      {
+        "name": "Супергруппа",
+        "type": "supergroup",
+        "chat_id": "YOUR_SUPERGROUP_CHAT_ID",
+        "enabled": false
+      },
+      {
+        "name": "Канал",
+        "type": "channel",
+        "chat_id": "YOUR_CHANNEL_CHAT_ID",
+        "enabled": false
+      }
+    ],
+    "parse_mode": "HTML",
+    "disable_web_page_preview": false,
+    "footer_text": "YOUR_FOOTER_TEXT (например:🤑 The Экономист (https://t.me/...))"
+  },
+  "news_sources": {
+    "rss_feeds": [
+      "https://www.rbc.ru/rss/news.rss",
+      "https://habr.com/ru/rss/all/all/?fl=ru"
+    ],
+    "newsapi": {
+      "enabled": true,
+      "api_key": "YOUR_NEWSAPI_KEY",
+      "categories": [
+        "technology",
+        "science"
+      ],
+      "language": "ru",
+      "page_size": 30,
+      "country": "ru"
+    },
+    "gnews": {
+      "enabled": true,
+      "api_key": "YOUR_GNEWS_KEY",
+      "categories": [
+        "technology",
+        "science"
+      ],
+      "language": "ru",
+      "page_size": 10,
+      "country": "ru"
+    },
+    "mediastack": {
+      "enabled": true,
+      "api_key": "YOUR_MEDIASTACK_KEY",
+      "categories": [
+        "technology",
+        "science"
+      ],
+      "language": "ru",
+      "page_size": 30
+    },
+    "custom": []
+  },
+  "digest": {
+    "items_count": 6,
+    "russia_focused": 5,
+    "international": 1,
+    "keywords": [
+      "Россия",
+      "РФ",
+      "Роскомнадзор",
+      "РКН",
+      "VPN",
+      "Telegram",
+      "телеграм",
+      "технологии",
+      "IT",
+      "интернет",
+      "кибербезопасность"
+    ],
+    "exclude_keywords": [
+      "спорт",
+      "шоу-бизнес",
+      "знаменитости"
+    ],
+    "lookback_hours": 48,
+    "max_candidates_for_llm": 20,
+    "dedup_similarity": 0.86,
+    "memory_days": 30,
+    "max_llm_calls_per_run": 8,
+    "max_input_chars_per_item": 2200,
+    "inline_url": true,
+    "mode": "single"
+  },
+  "schedule": {
+    "cron": "0 * * * *",
+    "timezone": "Europe/Moscow",
+    "interval_min_minutes": 30,
+    "interval_max_minutes": 60
+  },
+  "clodex": {
+    "enabled": true,
+    "api_key": "YOUR_CLODEX_API_KEY",
+    "base_url": "https://clodex.xyz/v1",
+    "model": "YOUR_CLODEX_MODEL",
+    "timeout_ms": 45000,
+    "max_output_tokens": 1400,
+    "temperature": 0.2
+  },
+  "google_ai": {
+    "enabled": false,
+    "api_key": "YOUR_GOOGLE_AI_STUDIO_API_KEY",
+    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "model": "gemini-2.0-flash",
+    "timeout_ms": 45000,
+    "max_output_tokens": 1400,
+    "temperature": 0.2
+  },
+  "monitoring": {
+    "currency": {
+      "usd_rub": 90
+    },
+    "clodex": {
+      "usd_per_million_tokens": 0.1
+    },
+    "free_limits": {
+      "newsapi": {
+        "requests": 100,
+        "period": "day",
+        "url": "https://newsapi.org/pricing",
+        "note": "Developer: 100 requests/day; development/testing only",
+        "api_key": "YOUR_NEWSAPI_KEY"
+      },
+      "gnews": {
+        "requests": 100,
+        "period": "day",
+        "url": "https://gnews.io/pricing",
+        "note": "Free: 100 requests/day; development/testing only",
+        "api_key": "YOUR_GNEWS_KEY"
+      },
+      "mediastack": {
+        "requests": 100,
+        "period": "month",
+        "url": "https://mediastack.com/pricing",
+        "note": "Free: 100 calls/month",
+        "api_key": "YOUR_MEDIASTACK_KEY"
+      },
+      "clodex": {
+        "requests": 0,
+        "period": "provider",
+        "url": "https://clodex.xyz/docs",
+        "note": "Лимит зависит от выбранного тарифа/модели; бот считает локальное потребление токенов"
+      }
+    }
+  },
+  "web": {
+    "enabled": false,
+    "port": 3000,
+    "host": "0.0.0.0",
+    "domain": "",
+    "password": "CHANGE_ME_ADMIN_PASSWORD"
+  }
+}
