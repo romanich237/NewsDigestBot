@@ -292,8 +292,8 @@ const META = {
     "Для обычной карточки добавляет открытый URL вместо ссылки в заголовке. Оформленный ИИ-пост сохраняет свои ссылки.",
   ],
   show_source: [
-    "Показывать источник",
-    "Добавляет название издания и ссылку на исходную статью. Можно отключить, если источник уже указан в тексте.",
+    "Источник и ссылка на статью",
+    "Показывает под постом название издания со ссылкой на исходную статью. Выключи, если источник уже указан в тексте.",
   ],
   schedule: ["Расписание", "Время работы считается в заданном часовом поясе."],
   cron: [
@@ -634,7 +634,7 @@ function renderField(key, value, parts, parent) {
               ].includes(full) &&
               value.enabled === false &&
               k !== "enabled"
-            ),
+            ) && !(full === "digest" && k === "show_source"),
         )
         .forEach(([k, v]) => renderField(k, v, [...parts, k], wrap));
     parent.append(wrap);
@@ -816,6 +816,7 @@ function jsonInput(value, parts, parent) {
 }
 function show(name) {
   current = name;
+  $("mobileNavigation").value = name;
   $("pageName").textContent = SECTIONS.find((s) => s[0] === name)[1];
   for (const b of $("navigation").children) {
     b.classList.toggle("active", b.dataset.section === name);
@@ -841,6 +842,24 @@ function show(name) {
   for (const key of keys)
     if (config[key] !== undefined)
       renderField(key, config[key], [key], $("fields"));
+  if (name === "telegram" && config.digest?.show_source !== undefined) {
+    const sourceGroup = node("div", { class: "group source-setting" });
+    sourceGroup.append(
+      node("h2", {}, "Ссылка на оригинал"),
+      node(
+        "p",
+        { class: "help" },
+        "Настройка строки с источником под каждой публикацией.",
+      ),
+    );
+    renderField(
+      "show_source",
+      config.digest.show_source,
+      ["digest", "show_source"],
+      sourceGroup,
+    );
+    $("fields").append(sourceGroup);
+  }
   if (name === "ai") {
     const test = node(
       "button",
@@ -1062,7 +1081,14 @@ for (const [i, [id, label]] of SECTIONS.entries()) {
   button.dataset.section = id;
   button.onclick = () => show(id);
   $("navigation").append(button);
+  const option = node(
+    "option",
+    { value: id },
+    id === "ai" ? "Модели и API" : label,
+  );
+  $("mobileNavigation").append(option);
 }
+$("mobileNavigation").onchange = () => show($("mobileNavigation").value);
 loadConfig().catch(() => {});
 setInterval(() => {
   if (!$("app").hidden) refresh();
