@@ -1,3 +1,4 @@
+const { completionUrl } = require('./llm_config');
 const axios = require('axios');
 
 // Keep the module name for compatibility with existing imports.
@@ -21,12 +22,17 @@ class ClodexClient {
       };
     } else {
       const base = provider === 'openai' ? 'https://api.openai.com/v1' : cfg.base_url || 'https://clodex.xyz/v1';
-      url = `${String(base).replace(/\/$/, '')}/chat/completions`;
+      url = provider === 'custom' ? completionUrl(cfg.base_url) : `${String(base).replace(/\/$/, '')}/chat/completions`;
       headers.Authorization = `Bearer ${cfg.api_key}`;
       body = { model: cfg.model, messages };
       if (provider === 'openai') {
         body.max_completion_tokens = cfg.max_output_tokens || 8192;
         // Temperature is not supported by every reasoning model.
+      } else if (provider === 'custom') {
+        const parameter = cfg.token_parameter || 'max_tokens';
+        if (!['max_tokens', 'max_completion_tokens'].includes(parameter)) throw new Error('custom.token_parameter: max_tokens или max_completion_tokens');
+        body[parameter] = cfg.max_output_tokens || 8192;
+        if (cfg.temperature !== null && cfg.temperature !== undefined && cfg.temperature !== '') body.temperature = Number(cfg.temperature);
       } else {
         body.max_tokens = cfg.max_output_tokens || 1400;
         body.temperature = cfg.temperature ?? 0.2;

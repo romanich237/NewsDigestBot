@@ -189,5 +189,14 @@
     "intervalSeconds": 60,
     "repository": "romanich237/NewsDigestBot",
     "branch": "main"
+  },
+  "custom": {
+    "enabled": true,
+    "base_url": "https://api.example.com/v1",
+    "api_key": "YOUR_CUSTOM_API_KEY",
+    "model": "YOUR_CUSTOM_MODEL",
+    "timeout_ms": 90000,
+    "max_output_tokens": 8192,
+    "token_parameter": "max_tokens"
   }
 }

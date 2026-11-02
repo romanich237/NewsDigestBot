@@ -25,8 +25,8 @@ npm run configure
 | `telegram.bot_token` | Токен бота |
 | `telegram.allowed_user_ids` | Свои Telegram ID |
 | `telegram.targets` | Получателей и каналы, включённых через `enabled: true` |
-| `ai.provider` | `openai`, `google` или `clodex` |
-| `openai` / `google_ai` / `clodex` | Ключ и модель выбранного провайдера |
+| `ai.provider` | `openai`, `google`, `clodex` или `custom` |
+| `openai` / `google_ai` / `clodex` / `custom` | Ключ и модель выбранного провайдера |
 | `news_sources` | RSS и дополнительные новостные API |
 | `schedule.timezone` | По умолчанию `Europe/Moscow` |
 
@@ -59,6 +59,7 @@ npm start
 | `openai` | `openai` | [OpenAI Platform](https://platform.openai.com/api-keys) |
 | `google` | `google_ai` | [Google AI Studio](https://aistudio.google.com/apikey) |
 | `clodex` | `clodex` | [CLODEX](https://clodex.xyz/) |
+| `custom` | `custom` | Ключ своего OpenAI-совместимого сервиса |
 
 Также принимаются `chatgpt`, `gemini` и `google_ai`. Выбирается один провайдер. При отсутствии раздела `ai` сохраняется прежний порядок: настроенный Google, затем CLODEX. Автоматического перехода на другой платный API при ошибке нет.
 
@@ -102,6 +103,36 @@ npm start
 Google вызывается через нативный `generateContent`, OpenAI через `/v1/chat/completions`. Старое поле `google_ai.base_url` больше не используется. Для CLODEX сохранены `base_url`, `temperature` и совместимый endpoint.
 
 После изменения провайдера, ключа или модели перезапусти процесс.
+
+### Свой Base URL, API-ключ и модель
+
+В мастере `npm run configure` выбери `ai.provider: custom`, затем заполни раздел «Свой OpenAI-совместимый API». Он также доступен при установке через `deploy/install.sh`. API-ключ вводится скрыто.
+
+```json
+{
+  "ai": {
+    "provider": "custom",
+    "format": "rich_html"
+  },
+  "custom": {
+    "enabled": true,
+    "base_url": "https://api.example.com/v1",
+    "api_key": "ВАШ_API_КЛЮЧ",
+    "model": "идентификатор-модели",
+    "timeout_ms": 90000,
+    "max_output_tokens": 8192,
+    "token_parameter": "max_tokens"
+  }
+}
+```
+
+Это фрагмент конфигурации: сохрани остальные разделы. URL указывается до `/chat/completions`, например `https://api.example.com/v1`; полный адрес этого endpoint тоже принимается, повторно он не добавляется. Поддерживаются HTTP и HTTPS, включая локальный сервер. Если сервис требует `/v1`, укажи его явно.
+
+Запрос использует OpenAI Chat Completions: `messages`, `model`, заголовок `Authorization: Bearer <api_key>`. Сервис должен возвращать `choices[0].message.content` с JSON по промпту. Произвольные API с другим форматом запросов/ответов этот режим не поддерживает. Ключ не подставляется в URL.
+
+Для моделей, которым нужен `max_completion_tokens`, поменяй `custom.token_parameter` с `max_tokens` на `max_completion_tokens`. Температура по умолчанию не отправляется; при необходимости добавь числовое `custom.temperature`.
+
+Расходы записываются отдельно как `custom`. Тарифы OpenAI автоматически не применяются: укажи свои цены через `monitoring.custom.input_usd_per_million` и `monitoring.custom.output_usd_per_million`. Без них стоимость будет отображаться нулевой, даже если сервис платный. После настройки выполни `npm run validate` и перезапусти бота.
 
 ### Бюджетные модели и цены
 
@@ -354,7 +385,7 @@ sudo -u newsbot node /opt/news-digest-bot/scripts/configure.js
 sudo systemctl restart news-digest-bot
 ```
 
-Мастер проходит Telegram и все типы получателей, OpenAI, Google, CLODEX, RSS и новостные API, состав выпуска, расписание, мониторинг, автообновление и веб-панель. Дополнительных получателей можно добавить по одному; списки вводятся через запятую. Для пользовательского JSON-источника сначала вводится его объект, затем можно изменить каждое поле.
+Мастер проходит Telegram и все типы получателей, OpenAI, Google, CLODEX, свой API, RSS и новостные API, состав выпуска, расписание, мониторинг, автообновление и веб-панель. Дополнительных получателей можно добавить по одному; списки вводятся через запятую. Для пользовательского JSON-источника сначала вводится его объект, затем можно изменить каждое поле.
 
 Во время `deploy/install.sh` этот же мастер запускается автоматически. После успешной проверки конфигурации установщик запускает сервис. Для настройки HTTPS отдельно запрашивается согласие на установку Nginx и Certbot. При повторной настройке работающего бота новые значения применятся после перезапуска.
 

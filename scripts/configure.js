@@ -3,10 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { Writable } = require('stream');
+const { resolveLlm } = require('../src/services/llm_config');
 const { updateSettings } = require('../src/services/auto_updater');
 const LABELS = {
   telegram: 'Telegram: бот, администраторы и получатели', ai: 'Выбор ИИ и формат постов',
-  openai: 'OpenAI', google_ai: 'Google Gemini', clodex: 'CLODEX', news_sources: 'Источники новостей',
+  custom: 'Свой OpenAI-совместимый API: URL, ключ и модель', openai: 'OpenAI', google_ai: 'Google Gemini', clodex: 'CLODEX', news_sources: 'Источники новостей',
   digest: 'Состав и обработка выпуска', schedule: 'Расписание', monitoring: 'Статистика, цены и квоты',
   updates: 'Автообновление GitHub', web: 'Веб-панель'
 };
@@ -85,7 +86,7 @@ async function configure(file = path.resolve(__dirname, '../config.json')) {
     console.log('\nНастройка NewsDigestBot. Enter = сохранить; - = очистить строку/список.');
     console.log('Да/нет для переключателей; списки через запятую. Токены и пароли скрыты.');
     console.log('Telegram ID вводи целиком. В targets указываются получатели, не администраторы.\n');
-    const order = ['telegram', 'ai', 'openai', 'google_ai', 'clodex', 'news_sources', 'digest', 'schedule', 'monitoring', 'updates', 'web'];
+    const order = ['telegram', 'ai', 'openai', 'google_ai', 'clodex', 'custom', 'news_sources', 'digest', 'schedule', 'monitoring', 'updates', 'web'];
     for (const section of [...order, ...Object.keys(cfg).filter(k => !order.includes(k))]) {
       if (!(section in cfg)) continue;
       console.log(`\n${LABELS[section] || section}`);
@@ -93,8 +94,9 @@ async function configure(file = path.resolve(__dirname, '../config.json')) {
       if (!/^(нет|no|n)$/i.test(edit)) cfg[section] = await field(section, cfg[section]);
     }
     const provider = { google: 'google_ai', gemini: 'google_ai', chatgpt: 'openai' }[cfg.ai.provider] || cfg.ai.provider;
-    if (!['openai', 'google_ai', 'clodex'].includes(provider)) throw new Error('ai.provider: openai, google или clodex');
+    if (!['openai', 'google_ai', 'clodex', 'custom'].includes(provider)) throw new Error('ai.provider: openai, google, clodex или custom');
     if (!['html', 'rich_html'].includes(cfg.ai.format)) throw new Error('ai.format: html или rich_html');
+    resolveLlm(cfg);
     updateSettings(cfg);
     if (cfg.web.enabled && (!cfg.web.password || placeholder(cfg.web.password))) throw new Error('Для web.enabled нужен настоящий пароль');
     if (fs.existsSync(file)) { const backup = `${file}.${Date.now()}.bak`; fs.copyFileSync(file, backup); fs.chmodSync(backup, 0o600); }
