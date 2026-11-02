@@ -4,13 +4,31 @@
 
 ## Быстрая установка
 
-Нужны Node.js 20.19+ или 22 LTS, Git и токен из [BotFather](https://t.me/BotFather). Для сборки SQLite на Ubuntu могут понадобиться `python3 make g++`.
+Поддерживаются **Ubuntu 22.04+ и Debian 12+**, архитектуры amd64 и arm64. Нужны права root (или sudo) и токен из [BotFather](https://t.me/BotFather).
+
+**Чистый сервер: установка всех компонентов и запуск через systemd**
+
+Выполни от root; если вошёл обычным пользователем, сначала `sudo -i`:
+
+```bash
+apt-get update && apt-get install -y git
+git clone https://github.com/romanich237/NewsDigestBot.git
+cd NewsDigestBot
+bash deploy/install.sh
+```
+
+Установщик автоматически ставит системные Node.js 22 LTS и npm, Git, curl, сертификаты, Python 3, компилятор и инструменты для SQLite. Подходящие системные Node.js 20.19+ и npm сохраняются. npm входит в пакет Node.js от NodeSource, отдельно выполнять `apt install npm` не нужно. Далее запускается мастер всех настроек, устанавливаются зависимости проекта и запускается systemd-сервис. Nginx и Certbot устанавливаются, если выбрана настройка HTTPS.
+
+Источники пакетов: репозитории ОС и [NodeSource](https://github.com/nodesource/distributions). Если Git уже установлен, команду `apt-get update && apt-get install -y git` можно пропустить.
 
 **Вариант с PM2:**
+
+Если проект уже скачан, системные зависимости можно установить отдельно: `sudo bash deploy/dependencies.sh`. На чистом сервере сначала установи Git командой выше.
 
 ```bash
 git clone https://github.com/romanich237/NewsDigestBot.git
 cd NewsDigestBot
+sudo bash deploy/dependencies.sh
 npm ci
 npm run configure
 npm run validate
@@ -21,7 +39,7 @@ pm2 save
 
 Мастер запросит настройки Telegram, API, модели, источники и расписание. Для запуска после перезагрузки выполни `pm2 startup` и команду, которую он выведет.
 
-**Вариант с systemd и настройкой веб-панели на Ubuntu:**
+**Если репозиторий уже скачан (Ubuntu или Debian):**
 
 ```bash
 git clone https://github.com/romanich237/NewsDigestBot.git
@@ -309,13 +327,13 @@ pm2 restart news-digest-bot
 
 Веб-панель включается через `web.enabled`, порт задаётся в `web.port`, пароль в `web.password`. Она показывает статистику, позволяет запустить выпуск и поменять режим, интервал, ссылку и футер.
 
-Для установки на Ubuntu с systemd:
+Для установки на Ubuntu 22.04+ или Debian 12+ с systemd:
 
 ```bash
 sudo bash deploy/install.sh
 ```
 
-Установщик копирует проект в `/opt/news-digest-bot`, создаёт пользователя `newsbot` и сервис `news-digest-bot`. Он также предлагает домен, Nginx и сертификат Let's Encrypt; домен должен указывать на сервер. Используй один менеджер процесса: PM2 или systemd.
+Установщик автоматически устанавливает системные зависимости, копирует проект в `/opt/news-digest-bot`, создаёт пользователя `newsbot` и сервис `news-digest-bot`. Он также предлагает домен, Nginx и сертификат Let's Encrypt; домен должен указывать на сервер. Используй один менеджер процесса: PM2 или systemd.
 
 ```bash
 sudo systemctl status news-digest-bot
@@ -448,6 +466,7 @@ node --check src/bot/telegram_sender.js
 | `prompts/digest_prompt.txt` | Инструкции отбора новостей |
 | `config.example.json` | Пример конфигурации |
 | `scripts/configure.js` | Мастер всех настроек |
+| `deploy/dependencies.sh` | Установка Node.js, npm и системных зависимостей Ubuntu/Debian |
 | `src/services/auto_updater.js` | Запуск обновляющего процесса и координация перезапуска |
 | `src/updater.js` | Проверка GitHub, подготовка, установка и откат |
 

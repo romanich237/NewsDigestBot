@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Interactive installation and reconfiguration of NewsDigestBot on Ubuntu/systemd.
+# Interactive installation and reconfiguration of NewsDigestBot on Ubuntu and Debian/systemd.
 set -euo pipefail
 APP_USER="newsbot"
 APP_DIR="/opt/news-digest-bot"
@@ -9,18 +9,11 @@ if [ "$(id -u)" -ne 0 ]; then
   echo "Запустите sudo bash deploy/install.sh" >&2
   exit 1
 fi
-for tool in node npm; do
-  if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "Не найден $tool. Установите Node.js 20.19+ или 22 LTS с npm." >&2
-    exit 1
-  fi
-done
-node -e "const [a,b]=process.versions.node.split('.').map(Number);if(a<20||(a===20&&b<19)){console.error('Требуется Node.js 20.19+');process.exit(1)}"
-if ! command -v git >/dev/null 2>&1; then
-  apt-get update
-  apt-get install -y git
-fi
-NODE_BIN="$(command -v node)"
+# Use system binaries: root's nvm installation is not available to the newsbot user.
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
+. "$SRC_DIR/deploy/dependencies.sh"
+install_dependencies
+NODE_BIN="/usr/bin/node"
 if ! id "$APP_USER" >/dev/null 2>&1; then
   useradd --system --shell /usr/sbin/nologin --home-dir "$APP_DIR" "$APP_USER"
 fi
