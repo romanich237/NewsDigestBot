@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { Writable } = require('stream');
+const { configureTelegram, askBoolean } = require('./configure_telegram');
 const { resolveLlm } = require('../src/services/llm_config');
 const { updateSettings } = require('../src/services/auto_updater');
 const LABELS = {
@@ -126,14 +127,14 @@ async function configure(file = path.resolve(__dirname, '../config.json')) {
   try {
     console.log('\nНастройка NewsDigestBot. Enter = сохранить; - = очистить строку/список.');
     console.log('Да/нет для переключателей; списки через запятую. Токены и пароли скрыты.');
-    console.log('Telegram ID вводи целиком. В targets указываются получатели, не администраторы.\n');
+    console.log('Тип получателя выбирается по номеру. Примеры каналов не добавляются автоматически.\n');
     const order = ['telegram', 'ai', 'openai', 'google_ai', 'clodex', 'custom', 'news_sources', 'digest', 'schedule', 'monitoring', 'updates', 'web'];
     for (const section of [...order, ...Object.keys(cfg).filter(k => !order.includes(k))]) {
       if (!(section in cfg)) continue;
       console.log(`\n${LABELS[section] || section}`);
       if (section === 'web') { cfg.web = await configureWeb(cfg.web, ask); continue; }
-      const edit = await ask('Настроить этот раздел? [да]: ');
-      if (!/^(нет|no|n)$/i.test(edit)) cfg[section] = await field(section, cfg[section]);
+      const edit = await askBoolean(ask, 'Настроить этот раздел?', true);
+      if (edit) cfg[section] = section === 'telegram' ? await configureTelegram(cfg.telegram, ask) : await field(section, cfg[section]);
     }
     const provider = { google: 'google_ai', gemini: 'google_ai', chatgpt: 'openai' }[cfg.ai.provider] || cfg.ai.provider;
     if (!['openai', 'google_ai', 'clodex', 'custom'].includes(provider)) throw new Error('ai.provider: openai, google, clodex или custom');
