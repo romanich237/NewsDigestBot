@@ -170,7 +170,9 @@
     "port": 3000,
     "host": "0.0.0.0",
     "domain": "",
-    "password": "CHANGE_ME_ADMIN_PASSWORD"
+    "password": "CHANGE_ME_ADMIN_PASSWORD",
+    "auto_ssl": true,
+    "ssl_email": ""
   },
   "ai": {
     "provider": "clodex",

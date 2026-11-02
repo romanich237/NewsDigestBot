@@ -43,14 +43,16 @@ fi
 WEB_ENABLED="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.enabled === true")"
 WEB_DOMAIN="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.domain || ''")"
 WEB_PORT="$("$NODE_BIN" -p "Number(JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.port || 3000)")"
+WEB_SSL="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.auto_ssl === true")"
+WEB_EMAIL="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.ssl_email || ''")"
 SSL_DONE=0
-if [ "$WEB_ENABLED" = true ] && [ -n "$WEB_DOMAIN" ]; then
+if [ "$WEB_ENABLED" = true ] && [ "$WEB_SSL" = true ]; then
   if ! [[ "$WEB_DOMAIN" =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$ ]] || ! [[ "$WEB_PORT" =~ ^[0-9]+$ ]] || [ "$WEB_PORT" -lt 1 ] || [ "$WEB_PORT" -gt 65535 ]; then
     echo "Некорректный домен или порт веб-панели" >&2
     exit 1
   fi
-  read -rp "Настроить Nginx и HTTPS для $WEB_DOMAIN? [y/N]: " HTTPS_SETUP
-  if [[ "$HTTPS_SETUP" =~ ^([yY]|да)$ ]]; then
+  # The wizard already records the user’s choice of automatic HTTPS.
+  if [ -n "$WEB_DOMAIN" ]; then
     apt-get update
     apt-get install -y nginx certbot python3-certbot-nginx
     cat > "/etc/nginx/sites-available/$SERVICE" <<NGINX
@@ -69,8 +71,17 @@ NGINX
     ln -sf "/etc/nginx/sites-available/$SERVICE" "/etc/nginx/sites-enabled/$SERVICE"
     if [ -L /etc/nginx/sites-enabled/default ]; then unlink /etc/nginx/sites-enabled/default; fi
     nginx -t
+    systemctl enable --now nginx
     systemctl reload nginx
-    if certbot --nginx -d "$WEB_DOMAIN" --non-interactive --agree-tos -m "admin@$WEB_DOMAIN" --redirect; then SSL_DONE=1; fi
+    CERTBOT_ARGS=(--nginx -d "$WEB_DOMAIN" --non-interactive --agree-tos --redirect --keep-until-expiring)
+    if [ -n "$WEB_EMAIL" ]; then CERTBOT_ARGS+=(--email "$WEB_EMAIL"); else CERTBOT_ARGS+=(--register-unsafely-without-email); fi
+    if certbot "${CERTBOT_ARGS[@]}"; then
+      SSL_DONE=1
+      systemctl enable --now certbot.timer
+    else
+      echo "Не удалось выпустить SSL. Проверь DNS домена $WEB_DOMAIN и доступность портов 80/443, затем повтори установку." >&2
+      exit 1
+    fi
   fi
 fi
 cat > "/etc/systemd/system/$SERVICE.service" <<UNIT
@@ -100,4 +111,10 @@ echo "Конфигурация: $APP_DIR/config.json"
 echo "Все настройки повторно: sudo -u $APP_USER $NODE_BIN $APP_DIR/scripts/configure.js"
 echo "После изменения настроек: sudo systemctl restart $SERVICE"
 echo "Логи: sudo journalctl -u $SERVICE -f"
-if [ "$SSL_DONE" = 1 ]; then echo "Панель: https://$WEB_DOMAIN"; fi
+if [ "$SSL_DONE" = 1 ]; then
+  echo "Панель: https://$WEB_DOMAIN (SSL продлевается автоматически)"
+elif [ "$WEB_ENABLED" = true ]; then
+  echo "Веб-панель включена на порту $WEB_PORT; автоматический SSL отключён."
+else
+  echo "Веб-панель отключена. Nginx и SSL для неё не устанавливались."
+fi

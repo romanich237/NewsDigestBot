@@ -34,6 +34,47 @@ function parseValue(raw, current) {
   }
   return raw;
 }
+async function configureWeb(current, ask) {
+  const web = { ...current };
+  async function yesNo(label, fallback) {
+    while (true) {
+      const raw = await ask(`${label} [${fallback ? 'да' : 'нет'}]: `);
+      if (!raw) return fallback;
+      try { return parseValue(raw, true); } catch { console.log('Введи да или нет.'); }
+    }
+  }
+  web.enabled = await yesNo('Нужна веб-панель?', web.enabled === true);
+  if (!web.enabled) return web;
+  web.auto_ssl = await yesNo('Автоматически настроить Nginx и SSL от Let’s Encrypt?', web.auto_ssl !== false);
+  while (true) {
+    const raw = await ask(`Домен веб-панели без https:// [${web.domain || ''}]: `);
+    const domain = (raw === '-' ? '' : raw || web.domain || '').replace(/^https?:\/\//i, '').replace(/\/$/, '').toLowerCase();
+    if ((!domain && !web.auto_ssl) || /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(domain)) { web.domain = domain; break; }
+    console.log('Для автоматического SSL нужен домен, например bot.example.com. Его DNS должен указывать на сервер.');
+  }
+  while (true) {
+    const raw = await ask(`Внутренний порт веб-панели [${web.port || 3000}]: `);
+    const port = Number(raw || web.port || 3000);
+    if (Number.isInteger(port) && port >= 1 && port <= 65535) { web.port = port; break; }
+    console.log('Порт должен быть от 1 до 65535.');
+  }
+  web.host = web.auto_ssl ? '127.0.0.1' : (await ask(`Адрес прослушивания web.host [${web.host || '0.0.0.0'}]: `)) || web.host || '0.0.0.0';
+  while (true) {
+    const raw = await ask(`Пароль веб-панели [${web.password && !placeholder(web.password) ? 'задан, Enter сохранить' : 'не задан'}]: `, true);
+    const password = raw || web.password;
+    if (password && !placeholder(password)) { web.password = password; break; }
+    console.log('Укажи пароль для входа в панель.');
+  }
+  if (web.auto_ssl) {
+    while (true) {
+      const raw = await ask(`Email для уведомлений Let’s Encrypt (можно пропустить) [${web.ssl_email || ''}]: `);
+      const email = raw === '-' ? '' : raw || web.ssl_email || '';
+      if (!email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { web.ssl_email = email; break; }
+      console.log('Укажи email или - для очистки.');
+    }
+  }
+  return web;
+}
 async function configure(file = path.resolve(__dirname, '../config.json')) {
   const example = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../config.example.json'), 'utf8'));
   const existing = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
@@ -90,6 +131,7 @@ async function configure(file = path.resolve(__dirname, '../config.json')) {
     for (const section of [...order, ...Object.keys(cfg).filter(k => !order.includes(k))]) {
       if (!(section in cfg)) continue;
       console.log(`\n${LABELS[section] || section}`);
+      if (section === 'web') { cfg.web = await configureWeb(cfg.web, ask); continue; }
       const edit = await ask('Настроить этот раздел? [да]: ');
       if (!/^(нет|no|n)$/i.test(edit)) cfg[section] = await field(section, cfg[section]);
     }
@@ -107,4 +149,4 @@ async function configure(file = path.resolve(__dirname, '../config.json')) {
   } finally { muted = false; rl.close(); }
 }
 if (require.main === module) configure(process.argv[2]).catch(error => { console.error(error.message); process.exitCode = 1; });
-module.exports = { merge, parseValue, secret, configure };
+module.exports = { merge, parseValue, secret, configure, configureWeb };
