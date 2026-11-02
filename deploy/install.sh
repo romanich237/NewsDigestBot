@@ -42,7 +42,17 @@ if [ ! -f "$APP_DIR/config.json" ]; then
 fi
 echo "[5/8] Настройка конфигурации…"
 # No keys or passwords are passed through argv/environment or printed by the wizard.
-"$NODE_BIN" "$APP_DIR/scripts/configure.js" "$APP_DIR/config.json"
+echo "1. Настроить всё в браузере после подключения домена (рекомендуется)"
+echo "2. Пройти настройку в терминале"
+while true; do
+  read -rp "Способ настройки [1]: " SETUP_MODE
+  case "${SETUP_MODE:-1}" in
+    1) "$NODE_BIN" "$APP_DIR/scripts/configure.js" "$APP_DIR/config.json" --web-only; break ;;
+    2) "$NODE_BIN" "$APP_DIR/scripts/configure.js" "$APP_DIR/config.json"; break ;;
+    *) echo "Введи 1 или 2." ;;
+  esac
+done
+"$NODE_BIN" "$APP_DIR/scripts/select_port.js" "$APP_DIR/config.json"
 mkdir -p "$APP_DIR/logs"
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 chmod 600 "$APP_DIR/config.json"
@@ -52,7 +62,7 @@ if [ -f "$APP_DIR/package-lock.json" ]; then
 else
   (cd "$APP_DIR" && runuser -u "$APP_USER" -- env HOME="$APP_DIR" npm install --omit=dev --no-audit --no-fund)
 fi
-(cd "$APP_DIR" && runuser -u "$APP_USER" -- "$NODE_BIN" src/main.js --validate)
+(cd "$APP_DIR" && runuser -u "$APP_USER" -- "$NODE_BIN" src/main.js --validate-install)
 
 WEB_ENABLED="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.enabled === true")"
 WEB_DOMAIN="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.domain || ''")"
@@ -60,6 +70,11 @@ WEB_PORT="$("$NODE_BIN" -p "Number(JSON.parse(require('fs').readFileSync('$APP_D
 WEB_SSL="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.auto_ssl === true")"
 WEB_EMAIL="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.ssl_email || ''")"
 echo "[7/8] Проверяю настройки веб-панели и SSL…"
+DUCKDNS_ENABLED="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.duckdns?.enabled === true")"
+if [ "$DUCKDNS_ENABLED" = true ]; then
+  echo "Обновляю DuckDNS и ожидаю привязку домена к IPv4 сервера…"
+  "$NODE_BIN" "$APP_DIR/src/services/duckdns.js" "$APP_DIR/config.json"
+fi
 SSL_DONE=0
 if [ "$WEB_ENABLED" = true ] && [ "$WEB_SSL" = true ]; then
   if ! [[ "$WEB_DOMAIN" =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$ ]] || ! [[ "$WEB_PORT" =~ ^[0-9]+$ ]] || [ "$WEB_PORT" -lt 1 ] || [ "$WEB_PORT" -gt 65535 ]; then
@@ -124,7 +139,8 @@ systemctl enable "$SERVICE"
 systemctl restart "$SERVICE"
 echo "Готово. Сервис запущен: $SERVICE"
 echo "Конфигурация: $APP_DIR/config.json"
-echo "Все настройки повторно: sudo -u $APP_USER $NODE_BIN $APP_DIR/scripts/configure.js"
+echo "После открытия панели войди по заданному паролю, заполни настройки и нажми Сохранить и включить бота."
+echo "Резервная настройка через терминал: sudo -u $APP_USER $NODE_BIN $APP_DIR/scripts/configure.js"
 echo "После изменения настроек: sudo systemctl restart $SERVICE"
 echo "Логи: sudo journalctl -u $SERVICE -f"
 if [ "$SSL_DONE" = 1 ]; then

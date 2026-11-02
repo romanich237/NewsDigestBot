@@ -1,7 +1,7 @@
 const {bodyFor,sendFormatted}=require('../services/post_format');
 const {Telegraf,Markup}=require('telegraf'); const {escapeHtml,validHttpUrl}=require('../utils');
 class TelegramSender{
- constructor(config,onApi){this.config=config;this.cfg=config.telegram;this.digestCfg=config.digest||{};this.allowed=new Set((config.telegram.allowed_user_ids||[]).map(String));this.bot=new Telegraf(this.cfg.bot_token);this.onApi=onApi;this.awaiting=new Map();this.saveConfig=null;this.register();}
+ constructor(config,onApi){this.config=config;this.cfg=config.telegram;this.digestCfg=config.digest||{};this.allowed=new Set((config.telegram.allowed_user_ids||[]).map(String));this.bot=new Telegraf(this.cfg.bot_token);this.onApi=onApi;this.awaiting=new Map();this.saveConfig=null;this.bot.use(async(ctx,next)=>{if(!this.isAllowed(ctx)){if(ctx.callbackQuery)return ctx.answerCbQuery('Нет доступа.');return ctx.reply('Нет доступа.');}return next();});this.register();}
  setConfigSaver(fn){this.saveConfig=fn;}
  persist(){try{if(this.saveConfig)this.saveConfig(this.config);}catch(e){console.error('[CONFIG SAVE]',e.message);}}
  isAllowed(ctx){return this.allowed.size===0||this.allowed.has(String(ctx.from?.id||''));}

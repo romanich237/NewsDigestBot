@@ -1,38 +1,11 @@
 {
   "telegram": {
     "bot_token": "YOUR_BOT_TOKEN",
-    "allowed_user_ids": [
-      "YOUR_TELEGRAM_USER_ID"
-    ],
-    "targets": [
-      {
-        "name": "Личные сообщения",
-        "type": "private",
-        "chat_id": "YOUR_PRIVATE_CHAT_ID",
-        "enabled": true
-      },
-      {
-        "name": "Группа",
-        "type": "group",
-        "chat_id": "YOUR_GROUP_CHAT_ID",
-        "enabled": false
-      },
-      {
-        "name": "Супергруппа",
-        "type": "supergroup",
-        "chat_id": "YOUR_SUPERGROUP_CHAT_ID",
-        "enabled": false
-      },
-      {
-        "name": "Канал",
-        "type": "channel",
-        "chat_id": "YOUR_CHANNEL_CHAT_ID",
-        "enabled": false
-      }
-    ],
+    "allowed_user_ids": [],
+    "targets": [],
     "parse_mode": "HTML",
     "disable_web_page_preview": false,
-    "footer_text": "YOUR_FOOTER_TEXT (например:🤑 The Экономист (https://t.me/...))"
+    "footer_text": ""
   },
   "news_sources": {
     "rss_feeds": [
@@ -40,7 +13,7 @@
       "https://habr.com/ru/rss/all/all/?fl=ru"
     ],
     "newsapi": {
-      "enabled": true,
+      "enabled": false,
       "api_key": "YOUR_NEWSAPI_KEY",
       "categories": [
         "technology",
@@ -51,7 +24,7 @@
       "country": "ru"
     },
     "gnews": {
-      "enabled": true,
+      "enabled": false,
       "api_key": "YOUR_GNEWS_KEY",
       "categories": [
         "technology",
@@ -62,7 +35,7 @@
       "country": "ru"
     },
     "mediastack": {
-      "enabled": true,
+      "enabled": false,
       "api_key": "YOUR_MEDIASTACK_KEY",
       "categories": [
         "technology",
@@ -172,7 +145,14 @@
     "domain": "",
     "password": "CHANGE_ME_ADMIN_PASSWORD",
     "auto_ssl": true,
-    "ssl_email": ""
+    "ssl_email": "",
+    "random_port": true,
+    "duckdns": {
+      "enabled": false,
+      "domain": "",
+      "token": "",
+      "interval_minutes": 5
+    }
   },
   "ai": {
     "provider": "clodex",
@@ -199,6 +179,10 @@
     "model": "YOUR_CUSTOM_MODEL",
     "timeout_ms": 90000,
     "max_output_tokens": 8192,
-    "token_parameter": "max_tokens"
+    "token_parameter": "max_tokens",
+    "temperature": null
+  },
+  "setup": {
+    "completed": false
   }
 }
