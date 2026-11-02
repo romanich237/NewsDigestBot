@@ -1,20 +1,59 @@
 # NewsDigestBot
 
-Telegram-бот для автоматического сбора новостей, подготовки постов через ИИ и отправки в личные сообщения, группы и каналы. Node.js, SQLite, настройки в `config.json`, запуск через PM2 или systemd.
+Автоматически собирает новости из RSS и API, отбирает материалы, оформляет посты через ИИ и публикует их в Telegram по расписанию. Поддерживает OpenAI, Google Gemini, CLODEX и свой OpenAI-совместимый API; отдельные посты или дайджест, веб-панель и автообновление из GitHub.
 
-> Самостоятельная альтернатива [CraftStick/NewsBot](https://github.com/CraftStick/NewsBot), не форк.
-> Репозиторий: [romanich237/NewsDigestBot](https://github.com/romanich237/NewsDigestBot).
-
-## Установка
+## Быстрая установка
 
 Нужны Node.js 20.19+ или 22 LTS, Git и токен из [BotFather](https://t.me/BotFather). Для сборки SQLite на Ubuntu могут понадобиться `python3 make g++`.
+
+**Вариант с PM2:**
 
 ```bash
 git clone https://github.com/romanich237/NewsDigestBot.git
 cd NewsDigestBot
 npm ci
 npm run configure
+npm run validate
+npm install -g pm2
+pm2 start ecosystem.config.js
+pm2 save
 ```
+
+Мастер запросит настройки Telegram, API, модели, источники и расписание. Для запуска после перезагрузки выполни `pm2 startup` и команду, которую он выведет.
+
+**Вариант с systemd и настройкой веб-панели на Ubuntu:**
+
+```bash
+git clone https://github.com/romanich237/NewsDigestBot.git
+cd NewsDigestBot
+sudo bash deploy/install.sh
+```
+
+Выбери один способ запуска. Под PM2 и systemd проверка обновлений из `main` выполняется каждую минуту. Для канала боту нужны права публикации.
+
+## Бюджетные модели и цены
+
+Проверено 02.11.2026. USD за **1 миллион токенов**, обычная обработка коротких текстовых запросов. Без Batch, инструментов, кэширования и налогов.
+
+| Провайдер / модель | Вход | Выход | Примечание |
+| --- | ---: | ---: | --- |
+| OpenAI `gpt-6-luna` | $0.10 | $0.50 | Основной бюджетный вариант |
+| OpenAI `gpt-5.6-luna` | $0.20 | $1.20 | Предыдущее поколение |
+| OpenAI `gpt-5-nano` | $0.05 | $0.40 | Старая модель, Deprecated; проверь доступность |
+| Google `gemini-2.5-flash-lite` | $0.10 | $0.40 | Минимальные расходы |
+| Google `gemini-3.1-flash-lite` | $0.25 | $1.50 | Более новое поколение |
+| Google `gemini-3.5-flash-lite` | $0.30 | $2.50 | Более свежий Flash-Lite |
+
+Для недорогого подключения начни с GPT-6 Luna или Gemini 2.5 Flash-Lite. У остальных вариантов сравнивай обе цены: новая модель не обязательно дешевле.
+
+1000 входных + 1000 выходных токенов стоят примерно $0.0006 у GPT-6 Luna или $0.0005 у Gemini 2.5 Flash-Lite. Рассуждения также могут расходовать выходные токены. У Gemini бывает бесплатная квота с ограничениями модели, региона и проекта.
+
+Официальные источники: [OpenAI](https://developers.openai.com/api/docs/pricing), [GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna), [GPT-5 nano](https://developers.openai.com/api/docs/models/gpt-5-nano), [Google Gemini](https://ai.google.dev/gemini-api/docs/pricing). Цены CLODEX проверяй по его каталогу.
+
+> Самостоятельная альтернатива [CraftStick/NewsBot](https://github.com/CraftStick/NewsBot), не форк.
+> Репозиторий: [romanich237/NewsDigestBot](https://github.com/romanich237/NewsDigestBot).
+
+## Подробная настройка
 
 Мастер предложит ввести все разделы конфигурации. Enter сохраняет значение, `-` очищает строку или список. Раздел можно пропустить, ответив «нет». API-ключи и пароли вводятся без отображения на экране. При повторном запуске текущие настройки сохраняются, перед записью создаётся резервная копия.
 
@@ -133,25 +172,6 @@ Google вызывается через нативный `generateContent`, OpenA
 Для моделей, которым нужен `max_completion_tokens`, поменяй `custom.token_parameter` с `max_tokens` на `max_completion_tokens`. Температура по умолчанию не отправляется; при необходимости добавь числовое `custom.temperature`.
 
 Расходы записываются отдельно как `custom`. Тарифы OpenAI автоматически не применяются: укажи свои цены через `monitoring.custom.input_usd_per_million` и `monitoring.custom.output_usd_per_million`. Без них стоимость будет отображаться нулевой, даже если сервис платный. После настройки выполни `npm run validate` и перезапусти бота.
-
-### Бюджетные модели и цены
-
-Проверено 02.11.2026. USD за **1 миллион токенов**, обычная обработка коротких текстовых запросов. Без Batch, инструментов, кэширования и налогов.
-
-| Провайдер / модель | Вход | Выход | Примечание |
-| --- | ---: | ---: | --- |
-| OpenAI `gpt-6-luna` | $0.10 | $0.50 | Основной бюджетный вариант |
-| OpenAI `gpt-5.6-luna` | $0.20 | $1.20 | Предыдущее поколение |
-| OpenAI `gpt-5-nano` | $0.05 | $0.40 | Старая модель, Deprecated; проверь доступность |
-| Google `gemini-2.5-flash-lite` | $0.10 | $0.40 | Минимальные расходы |
-| Google `gemini-3.1-flash-lite` | $0.25 | $1.50 | Более новое поколение |
-| Google `gemini-3.5-flash-lite` | $0.30 | $2.50 | Более свежий Flash-Lite |
-
-Для недорогого подключения начни с GPT-6 Luna или Gemini 2.5 Flash-Lite. У остальных вариантов сравнивай обе цены: новая модель не обязательно дешевле.
-
-1000 входных + 1000 выходных токенов стоят примерно $0.0006 у GPT-6 Luna или $0.0005 у Gemini 2.5 Flash-Lite. Рассуждения также могут расходовать выходные токены. У Gemini бывает бесплатная квота с ограничениями модели, региона и проекта.
-
-Официальные источники: [OpenAI](https://developers.openai.com/api/docs/pricing), [GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna), [GPT-5 nano](https://developers.openai.com/api/docs/models/gpt-5-nano), [Google Gemini](https://ai.google.dev/gemini-api/docs/pricing). Цены CLODEX проверяй по его каталогу.
 
 ### Учёт расходов
 
