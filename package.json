@@ -1,7 +1,7 @@
 {
   "name": "news-digest-bot",
-  "version": "1.1.0",
-  "description": "Telegram news digest bot with SQLite, configurable news APIs, CLODEX monitoring, and PM2 support.",
+  "version": "1.2.0",
+  "description": "Telegram news digests with OpenAI, Google Gemini, CLODEX and rich formatting.",
   "main": "src/main.js",
   "type": "commonjs",
   "scripts": {

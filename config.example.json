@@ -123,9 +123,9 @@
     "enabled": false,
     "api_key": "YOUR_GOOGLE_AI_STUDIO_API_KEY",
     "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-    "model": "gemini-2.0-flash",
-    "timeout_ms": 45000,
-    "max_output_tokens": 1400,
+    "model": "gemini-2.5-flash-lite",
+    "timeout_ms": 90000,
+    "max_output_tokens": 8192,
     "temperature": 0.2
   },
   "monitoring": {
@@ -171,5 +171,16 @@
     "host": "0.0.0.0",
     "domain": "",
     "password": "CHANGE_ME_ADMIN_PASSWORD"
+  },
+  "ai": {
+    "provider": "clodex",
+    "format": "rich_html"
+  },
+  "openai": {
+    "enabled": true,
+    "api_key": "YOUR_OPENAI_API_KEY",
+    "model": "gpt-6-luna",
+    "timeout_ms": 90000,
+    "max_output_tokens": 8192
   }
 }
