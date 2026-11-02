@@ -182,5 +182,12 @@
     "model": "gpt-6-luna",
     "timeout_ms": 90000,
     "max_output_tokens": 8192
+  },
+  "updates": {
+    "enabled": true,
+    "autoInstall": true,
+    "intervalSeconds": 60,
+    "repository": "romanich237/NewsDigestBot",
+    "branch": "main"
   }
 }
