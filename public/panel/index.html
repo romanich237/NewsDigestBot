@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fafafa"><title>NewsDigestBot — панель управления</title><link rel="stylesheet" href="/style.css"><script src="/panel.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fafafa"><title>NewsDigestBot — панель управления</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/components.css"><script src="/panel-fields.js" defer></script><script src="/panel-editor.js" defer></script><script src="/panel.js" defer></script></head>
 <body>
 <a href="#main-content" class="skip-link">Перейти к содержимому</a>
 <main id="login" class="login">
@@ -17,7 +17,7 @@
       <section class="api-report"><div class="section-heading"><div><h2>Расход API</h2><p>Локальный учёт запросов и токенов</p></div><button id="openPrices" class="text-button">Цены и лимиты →</button></div><pre id="report">Загружаем статистику…</pre></section>
     </section>
     <section id="editor" hidden><div class="page-heading"><div><p class="eyebrow">Настройки редакции</p><h1 id="sectionTitle"></h1><p id="sectionDescription"></p></div></div><div id="fields"></div></section>
-  </main><footer class="savebar"><div><strong id="saveStatus" role="status">Все изменения сохранены</strong><p>Черновик сохраняет настройки и останавливает публикации</p></div><div class="actions"><button id="saveDraft" class="secondary">Сохранить черновик</button><button id="activate">Сохранить и включить бота</button></div></footer>
+  </main><footer class="savebar"><div><strong id="saveStatus" role="status">Все изменения сохранены</strong><p>Черновик сохраняется автоматически после изменения</p></div><div class="actions"><button id="saveDraft" class="secondary">Сохранить сейчас</button><button id="activate">Сохранить и включить бота</button></div></footer>
   </div>
 </div>
 </body></html>

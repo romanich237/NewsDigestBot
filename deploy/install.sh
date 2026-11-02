@@ -42,18 +42,32 @@ if [ ! -f "$APP_DIR/config.json" ]; then
 fi
 echo "[5/8] Настройка конфигурации…"
 # No keys or passwords are passed through argv/environment or printed by the wizard.
-echo "1. Настроить всё в браузере после подключения домена (рекомендуется)"
-echo "2. Пройти настройку в терминале"
+echo "В браузере доступны проверка Telegram и ИИ, HTML-редактор и автосохранение."
 while true; do
-  read -rp "Способ настройки [1]: " SETUP_MODE
-  case "${SETUP_MODE:-1}" in
-    1) "$NODE_BIN" "$APP_DIR/scripts/configure.js" "$APP_DIR/config.json" --web-only; break ;;
-    2) "$NODE_BIN" "$APP_DIR/scripts/configure.js" "$APP_DIR/config.json"; break ;;
-    *) echo "Введи 1 или 2." ;;
+  read -rp "Настроить бота в браузере? [да]: " SETUP_MODE
+  case "${SETUP_MODE:-да}" in
+    да|д|yes|y|1) "$NODE_BIN" "$APP_DIR/scripts/configure.js" "$APP_DIR/config.json" --web-only; break ;;
+    нет|н|no|n|0) "$NODE_BIN" "$APP_DIR/scripts/configure.js" "$APP_DIR/config.json"; break ;;
+    *) echo "Ответь да или нет." ;;
   esac
 done
 "$NODE_BIN" "$APP_DIR/scripts/select_port.js" "$APP_DIR/config.json"
 mkdir -p "$APP_DIR/logs"
+mkdir -p "$APP_DIR/data/proxies"
+PROXY_FILE="$APP_DIR/data/proxies/socks5.txt"
+if [ ! -s "$PROXY_FILE" ]; then
+  echo "Один раз загружаю резервный список SOCKS5 для публичных RSS…"
+  PROXY_TEMP="$PROXY_FILE.tmp"
+  if curl --fail --location --silent --show-error --max-time 30 \
+    "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/socks5/data.txt" \
+    --output "$PROXY_TEMP" && grep -q '^socks5://' "$PROXY_TEMP"; then
+    chmod 600 "$PROXY_TEMP"
+    mv "$PROXY_TEMP" "$PROXY_FILE"
+  else
+    rm -f "$PROXY_TEMP"
+    echo "Список прокси недоступен. Установка продолжится без резервного маршрута RSS." >&2
+  fi
+fi
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 chmod 600 "$APP_DIR/config.json"
 echo "[6/8] Устанавливаю зависимости приложения…"

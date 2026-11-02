@@ -10,7 +10,10 @@
   "news_sources": {
     "rss_feeds": [
       "https://www.rbc.ru/rss/news.rss",
-      "https://habr.com/ru/rss/all/all/?fl=ru"
+      "https://habr.com/ru/rss/all/all/?fl=ru",
+      "https://tass.ru/rss/v2.xml",
+      "https://ria.ru/export/rss2/index.xml",
+      "https://www.kommersant.ru/rss/news.xml"
     ],
     "newsapi": {
       "enabled": false,
@@ -75,7 +78,22 @@
     "max_llm_calls_per_run": 8,
     "max_input_chars_per_item": 2200,
     "inline_url": true,
+    "show_source": true,
     "mode": "single"
+  },
+  "images": {
+    "enabled": false,
+    "provider": "unsplash",
+    "access_key": "YOUR_UNSPLASH_ACCESS_KEY",
+    "orientation": "landscape",
+    "per_post": true
+  },
+  "network": {
+    "public_proxy_fallback": {
+      "enabled": true,
+      "file": "data/proxies/socks5.txt",
+      "timeout_ms": 12000
+    }
   },
   "schedule": {
     "cron": "0 * * * *",

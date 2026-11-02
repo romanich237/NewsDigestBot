@@ -1,0 +1,126 @@
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.check-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.check-option:hover {
+  background: var(--surface);
+}
+.check-option input {
+  width: 16px !important;
+  min-height: 16px !important;
+  margin: 0;
+}
+.optional-settings {
+  margin: 20px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 20px;
+  background: var(--surface);
+}
+.optional-settings summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+.optional-settings > .help {
+  margin-top: 6px;
+}
+.optional-content {
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.compact-group {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.9fr) minmax(0, 1.25fr);
+  column-gap: 40px;
+}
+.compact-group > h2,
+.compact-group > .help {
+  grid-column: 1;
+}
+.compact-group > .field {
+  grid-column: 2;
+  grid-template-columns: 1fr;
+  padding: 16px 0;
+  gap: 8px;
+}
+.compact-group > .field:first-of-type {
+  margin-top: -56px;
+}
+.html-editor {
+  border: 1px solid #d2d9d4;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.html-editor textarea {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  min-height: 120px;
+}
+.editor-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.editor-toolbar button {
+  min-height: 30px;
+  padding: 4px 10px;
+  color: var(--secondary);
+  background: #fff;
+  border-color: var(--line);
+  font-size: 12px;
+}
+.editor-preview {
+  min-height: 48px;
+  padding: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--secondary);
+  overflow-wrap: anywhere;
+}
+.editor-preview span {
+  color: var(--muted);
+}
+.validation-state {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.field-control input.valid {
+  border-color: #2f7d52;
+  background: #f4fbf6;
+}
+.field-control input.invalid {
+  border-color: #b44848;
+  background: #fff7f7;
+}
+.test-connection {
+  margin: 8px 0 32px;
+}
+@media (max-width: 760px) {
+  .check-grid {
+    grid-template-columns: 1fr;
+  }
+  .compact-group {
+    display: block;
+  }
+  .compact-group > .field:first-of-type {
+    margin-top: 0;
+  }
+  .editor-toolbar {
+    overflow-x: auto;
+  }
+}
