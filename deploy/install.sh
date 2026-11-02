@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Interactive installation and reconfiguration of NewsDigestBot on Ubuntu and Debian/systemd.
 set -euo pipefail
+trap 'echo "Установка остановлена на строке $LINENO. Исправь ошибку выше и запусти deploy/install.sh повторно; конфиг и база сохраняются." >&2' ERR
 APP_USER="newsbot"
 APP_DIR="/opt/news-digest-bot"
 SERVICE="news-digest-bot"
@@ -14,6 +15,17 @@ export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
 . "$SRC_DIR/deploy/dependencies.sh"
 install_dependencies
 NODE_BIN="/usr/bin/node"
+mkdir -p /run/lock
+exec 9>/run/lock/newsdigest-install.lock
+if ! flock -n 9; then echo "Другой установщик NewsDigestBot уже работает." >&2; exit 1; fi
+if systemctl is-active --quiet "$SERVICE"; then
+  echo "Останавливаю предыдущий экземпляр на время обновления файлов…"
+  systemctl stop "$SERVICE"
+fi
+if [ -f "$APP_DIR/src/services/auto_updater.js" ]; then
+  "$NODE_BIN" -e "require(process.argv[1]).recoverUpdate(process.argv[2])" "$APP_DIR/src/services/auto_updater.js" "$APP_DIR"
+fi
+echo "[4/8] Подготавливаю файлы приложения…"
 if ! id "$APP_USER" >/dev/null 2>&1; then
   useradd --system --shell /usr/sbin/nologin --home-dir "$APP_DIR" "$APP_USER"
 fi
@@ -28,11 +40,13 @@ if [ ! -f "$APP_DIR/config.json" ]; then
     cp "$APP_DIR/config.example.json" "$APP_DIR/config.json"
   fi
 fi
+echo "[5/8] Настройка конфигурации…"
 # No keys or passwords are passed through argv/environment or printed by the wizard.
 "$NODE_BIN" "$APP_DIR/scripts/configure.js" "$APP_DIR/config.json"
 mkdir -p "$APP_DIR/logs"
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 chmod 600 "$APP_DIR/config.json"
+echo "[6/8] Устанавливаю зависимости приложения…"
 if [ -f "$APP_DIR/package-lock.json" ]; then
   (cd "$APP_DIR" && runuser -u "$APP_USER" -- env HOME="$APP_DIR" npm ci --omit=dev --no-audit --no-fund)
 else
@@ -45,6 +59,7 @@ WEB_DOMAIN="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/co
 WEB_PORT="$("$NODE_BIN" -p "Number(JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.port || 3000)")"
 WEB_SSL="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.auto_ssl === true")"
 WEB_EMAIL="$("$NODE_BIN" -p "JSON.parse(require('fs').readFileSync('$APP_DIR/config.json')).web?.ssl_email || ''")"
+echo "[7/8] Проверяю настройки веб-панели и SSL…"
 SSL_DONE=0
 if [ "$WEB_ENABLED" = true ] && [ "$WEB_SSL" = true ]; then
   if ! [[ "$WEB_DOMAIN" =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$ ]] || ! [[ "$WEB_PORT" =~ ^[0-9]+$ ]] || [ "$WEB_PORT" -lt 1 ] || [ "$WEB_PORT" -gt 65535 ]; then
@@ -84,6 +99,7 @@ NGINX
     fi
   fi
 fi
+echo "[8/8] Настраиваю и запускаю systemd-сервис…"
 cat > "/etc/systemd/system/$SERVICE.service" <<UNIT
 [Unit]
 Description=NewsDigestBot
